@@ -62,7 +62,8 @@ namespace FactionColonies
             }
 
 
-            //Settlment resources
+
+            //Settlement resources
             food = new ResourceFC(0, ResourceType.Food, this);
             weapons = new ResourceFC(0, ResourceType.Weapons, this);
             apparel = new ResourceFC(0, ResourceType.Apparel, this);
@@ -80,6 +81,10 @@ namespace FactionColonies
 
             initBaseProduction();
             updateProduction();
+
+            // Ideology
+            this.mainIdeology = Faction.OfPlayer.ideos.PrimaryIdeo;
+            this.governorid = -1;
         }
 
         public void addPrisoner(Pawn prisoner)
@@ -88,7 +93,7 @@ namespace FactionColonies
             //Log.Message(prisoners.Count().ToString());
         }
 
-        public int NumberBuildings => 3 + (int) Math.Floor(settlementLevel / 2f);
+        public int NumberBuildings => 3 + (int)Math.Floor(settlementLevel / 2f);
 
         public void upgradeSettlement(int times = 1)
         {
@@ -123,10 +128,10 @@ namespace FactionColonies
             foreach (ResourceType titheType in ResourceUtils.resourceTypes)
             {
                 ResourceFC resource = getResource(titheType);
-                resource.baseProduction = biomeDef.BaseProductionAdditive[(int) titheType]
-                                          + hillinessDef.BaseProductionAdditive[(int) titheType];
-                resource.baseProduction = biomeDef.BaseProductionMultiplicative[(int) titheType]
-                                          + hillinessDef.BaseProductionMultiplicative[(int) titheType];
+                resource.baseProduction = biomeDef.BaseProductionAdditive[(int)titheType]
+                                          + hillinessDef.BaseProductionAdditive[(int)titheType];
+                resource.baseProduction = biomeDef.BaseProductionMultiplicative[(int)titheType]
+                                          + hillinessDef.BaseProductionMultiplicative[(int)titheType];
                 resource.settlement = this;
             }
         }
@@ -184,7 +189,7 @@ namespace FactionColonies
             workersUltraMax = (workersMax + 5 - SlaverExtraWorkers) +
                                 (TraitUtilsFC.cycleTraits("workerBaseOverMax", traits, Operation.Addition) +
                                 TraitUtilsFC.cycleTraits("workerBaseOverMax",
-                                    Find.World.GetComponent<FactionFC>().traits, Operation.Addition)) + 
+                                    Find.World.GetComponent<FactionFC>().traits, Operation.Addition)) +
                                     returnOverMaxWorkersFromPrisoners();
 
         }
@@ -339,16 +344,19 @@ namespace FactionColonies
 
                 ResourceFC resource = getResource(resourceType);
 
-                resource.baseProduction = biomeDef.BaseProductionAdditive[(int) resourceType] +
-                                          hillinessDef.BaseProductionAdditive[(int) resourceType] +
+                resource.baseProduction = biomeDef.BaseProductionAdditive[(int)resourceType] +
+                                          hillinessDef.BaseProductionAdditive[(int)resourceType] +
                                           TraitUtilsFC.cycleTraits("productionBase" +
                                                                    resourceType, traits, Operation.Addition) +
                                           TraitUtilsFC.cycleTraits("productionBase" +
                                                                    resourceType, Find.World.GetComponent<FactionFC>().traits, Operation.Addition);
                 resource.baseProductionMultiplier = resourceMultiplier *
-                                                    biomeDef.BaseProductionMultiplicative[(int) resourceType] *
-                                                    hillinessDef.BaseProductionMultiplicative[(int) resourceType] *
-                                                    ((100 + egalitarianTaxBoost + isolationistTaxBoost + TraitUtilsFC.cycleTraits("taxBasePercentage", traits, Operation.Addition) + TraitUtilsFC.cycleTraits("taxBasePercentage", Find.World.GetComponent<FactionFC>().traits, Operation.Addition)) / 100);
+                                                    biomeDef.BaseProductionMultiplicative[(int)resourceType] *
+                                                    hillinessDef.BaseProductionMultiplicative[(int)resourceType] *
+                                                    ((100 + egalitarianTaxBoost + isolationistTaxBoost
+                                                    + TraitUtilsFC.cycleTraits("taxBasePercentage", traits, Operation.Addition)
+                                                    + TraitUtilsFC.cycleTraits("taxBasePercentage", Find.World.GetComponent<FactionFC>().traits, Operation.Addition)) / 100)
+                                                    + getGovernorResourceMultiplier(resourceType);
 
 
                 //add up additive variables
@@ -437,7 +445,7 @@ namespace FactionColonies
 
         public bool increaseWorkers(ResourceType? resourceType, int numWorkers)
         {
-            int singleMod = (numWorkers > 0) ?  1 : -1;
+            int singleMod = (numWorkers > 0) ? 1 : -1;
             if (resourceType == null)
             {
                 if (numWorkers >= 0 && workers <= workersUltraMax)
@@ -456,15 +464,15 @@ namespace FactionColonies
                     }
                 }
             }
-            else while(CanStillModify(resourceType, singleMod))
-            {
-                workers += singleMod;
-                getResource(resourceType.Value).assignedWorkers += singleMod;
-                numWorkers -= singleMod;
-                updateProfitAndProduction();
-                Find.World.GetComponent<FactionFC>().updateTotalProfit();
-                if (numWorkers == 0) return true;
-            }
+            else while (CanStillModify(resourceType, singleMod))
+                {
+                    workers += singleMod;
+                    getResource(resourceType.Value).assignedWorkers += singleMod;
+                    numWorkers -= singleMod;
+                    updateProfitAndProduction();
+                    Find.World.GetComponent<FactionFC>().updateTotalProfit();
+                    if (numWorkers == 0) return true;
+                }
 
             return false;
         }
@@ -486,7 +494,7 @@ namespace FactionColonies
             double overWork;
             if (workers > workersMax)
             {
-                overWork = (int) (workers - workersMax);
+                overWork = (int)(workers - workersMax);
             }
             else
             {
@@ -531,6 +539,77 @@ namespace FactionColonies
         public double getTotalProfit() //returns total profit (income - upkeep) of all settlements
         {
             return (getTotalIncome() - getTotalUpkeep());
+        }
+
+        // Ideology
+
+        public Ideo Ideo()
+        {
+            if (this.mainIdeology == null)
+            {
+                if (ideoId == -999 || Find.IdeoManager.classicMode)
+                    mainIdeology = Faction.OfPlayer.ideos.PrimaryIdeo;
+                else
+                    mainIdeology = Find.IdeoManager.IdeosListForReading.Find(x => x.id == ideoId);
+            }
+            return mainIdeology;
+
+        }
+
+        public void InstallNewGovernor(Pawn gov = null)
+        {
+            // if (!old.Faction != FactionColonies.getPlayerColonyFaction()) Make deposed governors join players
+            // TODO: Sanity checking for player-sent governors, like removing them properly
+            if (currentGovernor != null)
+                Find.WorldPawns.RemovePawn(currentGovernor);
+            if (gov == null)
+                this.governorid = generateLocalGovernor().thingIDNumber;
+            else
+                this.governorid = gov.thingIDNumber;
+            updateProfitAndProduction();
+
+        }
+
+        private Pawn generateLocalGovernor()
+        {
+
+
+            Pawn pawn = PawnGenerator.GeneratePawn(new PawnGenerationRequest(PawnKindDefOf.Colonist, Faction.OfPlayer, context: PawnGenerationContext.NonPlayer));
+            this.governorid = pawn.thingIDNumber;
+            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
+            pawn.skills.skills.ForEach(skill => skill.Level = Math.Min(skill.Level, 10));
+            return pawn;
+        }
+
+        public float getGovernorResourceMultiplier(ResourceType resourceType)
+        {
+            if (currentGovernor == null) return 0.33f;
+            float relevantSkillRating = 0;
+            var plants = currentGovernor.skills.GetSkill(SkillDefOf.Plants).Level;
+            var intellectual = currentGovernor.skills.GetSkill(SkillDefOf.Intellectual).Level;
+            var crafting = currentGovernor.skills.GetSkill(SkillDefOf.Crafting).Level;
+            var construction = currentGovernor.skills.GetSkill(SkillDefOf.Construction).Level;
+            var melee = currentGovernor.skills.GetSkill(SkillDefOf.Melee).Level;
+            var ranged = currentGovernor.skills.GetSkill(SkillDefOf.Shooting).Level;
+            var artistic = currentGovernor.skills.GetSkill(SkillDefOf.Artistic).Level;
+            var social = currentGovernor.skills.GetSkill(SkillDefOf.Social).Level;
+            var medical = currentGovernor.skills.GetSkill(SkillDefOf.Medicine).Level;
+            var animals = currentGovernor.skills.GetSkill(SkillDefOf.Animals).Level;
+            var mining = currentGovernor.skills.GetSkill(SkillDefOf.Mining).Level;
+            switch (resourceType)
+            {
+                case ResourceType.Research: relevantSkillRating = intellectual; break;
+                case ResourceType.Power: relevantSkillRating = intellectual; break;
+                case ResourceType.Apparel: relevantSkillRating = crafting; break;
+                case ResourceType.Weapons: relevantSkillRating = crafting; break;
+                case ResourceType.Medicine: relevantSkillRating = medical; break;
+                case ResourceType.Animals: relevantSkillRating = animals; break;
+                case ResourceType.Food: relevantSkillRating = Math.Max(animals, plants); break;
+                case ResourceType.Logging: relevantSkillRating = plants; break;
+                case ResourceType.Mining: relevantSkillRating = mining; break;
+            }
+            float aptitude = (relevantSkillRating + social) * 0.0625f; // Leads to a total 2.5 multiplier if both social and the relevant ability are maxed.
+            return Math.Max(aptitude, 0.5f); // The modifier is always at least 0.5, so combined ratings at 8 or below won't affect things unduly.
         }
 
         public void ExposeData()
@@ -599,6 +678,10 @@ namespace FactionColonies
             Scribe_Values.Look(ref autoDefend, "autoDefend");
 
 
+            // Ideology
+            Scribe_Values.Look(ref ideoId, "ideoID", -999);
+            Scribe_Values.Look(ref governorid, "governorid");
+
             //Prisoners
             Scribe_Collections.Look(ref prisonerList, "prisonerList", LookMode.Deep);
 
@@ -609,6 +692,8 @@ namespace FactionColonies
             //Shuttles
             Scribe_Values.Look(ref lastShuttleUsesTick, "lastShuttleUsesTick");
         }
+
+
 
         //Settlement Base Info
         public int mapLocation;
@@ -643,6 +728,12 @@ namespace FactionColonies
         public BiomeResourceDef hillinessDef;
         public BiomeResourceDef biomeDef;
 
+        // Ideology
+
+        private Ideo mainIdeology;
+        private int governorid;
+        public Pawn currentGovernor => Find.WorldPawns.AllPawnsAlive.FirstOrDefault(p => p.thingIDNumber == governorid);
+
 
         //ui only
         public double totalUpkeep;
@@ -667,6 +758,9 @@ namespace FactionColonies
 
         //shuttle stuff
         public int lastShuttleUsesTick = 0;
+
+        // Ideology
+        public int ideoId;
 
 
         //public static Biome biome;

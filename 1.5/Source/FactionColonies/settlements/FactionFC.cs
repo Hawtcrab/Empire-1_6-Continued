@@ -114,11 +114,12 @@ namespace FactionColonies
         public bool SoSShipCapitalMoving = false;
         public List<SettlementSoS2Info> createSettlementQueue = new List<SettlementSoS2Info>();
         public List<SettlementSoS2Info> deleteSettlementQueue = new List<SettlementSoS2Info>();
-
+        
         //Road builder
         public FCRoadBuilder roadBuilder = new FCRoadBuilder();
 
         public int traitMilitaristicTickLastUsedExtraSquad = -1;
+
 
         //Traits
         public int traitPacifistTickLastUsedDiplomat = -1;
@@ -201,6 +202,7 @@ namespace FactionColonies
         public override void ExposeData()
         {
             base.ExposeData();
+
             Scribe_Values.Look(ref name, "name");
             Scribe_Values.Look(ref title, "title");
             Scribe_Values.Look(ref capitalLocation, "capitalLocation");

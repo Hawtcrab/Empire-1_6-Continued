@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using FactionColonies.util;
+using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
+using RimWorld.QuestGen;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
+using static System.Collections.Specialized.BitVector32;
 
 namespace FactionColonies
 {
@@ -104,6 +107,7 @@ namespace FactionColonies
             TextAnchor anchorBefore = Text.Anchor;
 
             DrawHeader();
+            DrawIdeo();
             DrawSettlementStats(0, 80);
             //set 1 = settlement, set 2 = production
             DrawButtons(370, 336, 145, 25, 1);
@@ -347,9 +351,10 @@ namespace FactionColonies
 
         public void DrawHeader()
         {
+            var mainrect = new Rect(0, 0, 380, 60);
             //Draw Settlement Header Highlight
-            Widgets.DrawHighlight(new Rect(0, 0, 520, 60));
-            Widgets.DrawBox(new Rect(0, 0, 520, 60));
+            Widgets.DrawHighlight(mainrect);
+            Widgets.DrawBox(mainrect);
 
             //Draw town level and shadow backing
             Text.Font = GameFont.Medium;
@@ -359,28 +364,105 @@ namespace FactionColonies
 
             //Draw town name
             Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(new Rect(40, 0, 520, 30), settlement.name);
+            Widgets.Label(new Rect(40, 0, 340, 30), settlement.name);
 
             //Draw town title
             Text.Font = GameFont.Tiny;
             Widgets.Label(new Rect(50, 25, 150, 20), settlement.title); //returnSettlement().title);
 
-            //Draw town location flabor text
-            Text.Font = GameFont.Tiny;
-            Widgets.Label(new Rect(55, 40, 470, 20),
+            if (Mouse.IsOver(mainrect))
+            {
+                TipSignal tip = new TipSignal(() => 
                 "Located".Translate() + " " +
                 Find.WorldGrid[settlement.mapLocation].hilliness.GetLabel() + " " +
                 "LandOf".Translate() + " " +
-                Find.WorldGrid[settlement.mapLocation].PrimaryBiome.LabelCap.ToLower()); //returnSettlement().title);
+                Find.WorldGrid[settlement.mapLocation].PrimaryBiome.LabelCap.ToLower(),
+                this.settlement.Ideo().id
+                );
+                TooltipHandler.TipRegion(mainrect, tip);
+            }
 
             //Draw header Settings button
-            if (Widgets.ButtonImage(new Rect(495, 5, 20, 20), TexLoad.iconCustomize))
+            if (Widgets.ButtonImage(new Rect(345, 5, 20, 20), TexLoad.iconCustomize))
             {
                 //if click faction customize button
                 Find.WindowStack.Add(new SettlementCustomizeWindowFc(settlement));
                 //Log.Message("Settlement customize clicked");
             }
         }
+
+        void DrawIdeo()
+        {
+            // Ideo Icon, Size: 60
+            var rect = new Rect(390, 0, 60, 60);
+            Widgets.DrawHighlight(rect);
+            Widgets.DrawBox(rect);
+            this.settlement.Ideo().DrawIcon(new Rect(390, 0, 60, 60));
+            if (Mouse.IsOver(rect))
+            {
+                TipSignal tip = new TipSignal(() => string.Concat(new string[] {
+                    "ExplainSettlementIdeo".Translate(),
+                    "\n",
+                    this.settlement.Ideo().name
+                }
+                ), this.settlement.Ideo().id);
+                TooltipHandler.TipRegion(rect, tip);
+            }
+
+            // Governor Spot
+            var rect2 = new Rect(460, 0, 60, 60);
+            Widgets.DrawHighlight(rect2);
+            if (settlement.currentGovernor != null)
+                Widgets.ThingIcon(rect2, settlement.currentGovernor);
+            Widgets.DrawBox(rect2);
+            if (Mouse.IsOver(rect2))
+            {
+                TipSignal tip = new TipSignal(() => string.Concat(new string[] {
+                    "ExplainSettlementGovernor".Translate(),
+                    "\nCurrent Governor: " + settlement.currentGovernor?.Name ?? "Nobody",
+                    "\n\n" + (settlement.currentGovernor == null ? "Click here to appoint a random local." : generateGovernorStatline(settlement.currentGovernor))
+                }
+                ), this.settlement.loadID);
+                TooltipHandler.TipRegion(rect2, tip);
+            }
+            if (Widgets.ButtonInvisible(rect2))
+            {
+                if (settlement.currentGovernor != null)
+                    Find.WindowStack.Add(new GovernorWindow(settlement.currentGovernor));
+                else
+                    settlement.InstallNewGovernor();
+
+            }
+
+        }
+
+        private class GovernorWindow : Window
+        {
+            Pawn who;
+            public override Vector2 InitialSize => getSize();
+            public GovernorWindow (Pawn p)
+            {
+                who = p;
+            }
+            private Vector2 getSize()
+            {
+                return CharacterCardUtility.PawnCardSize(this.who);
+            }
+            public override void DoWindowContents(Rect inRect)
+            {
+                Vector2 vector = CharacterCardUtility.PawnCardSize(who);
+                CharacterCardUtility.DrawCharacterCard(new Rect(17f, 17f, vector.x, vector.y), who, null, default(Rect), true);
+            }
+        }
+
+        private string generateGovernorStatline(Pawn p)
+        {
+            string stats = "";
+            Enum.GetValues(typeof(ResourceType)).Cast<ResourceType>().Do(
+                type => stats += Enum.GetName(typeof(ResourceType), type) + ": " + settlement.getGovernorResourceMultiplier(type) + "\n");
+            return stats;
+        }
+
 
         public void DrawSettlementStats(int x, int y)
         {
@@ -458,6 +540,7 @@ namespace FactionColonies
 
                 Widgets.Label(new Rect(x + 50, y + (statSize + 15) * i, 80, statSize + 10),
                     settlement.prosperity + "%");
+
             }
         }
 
