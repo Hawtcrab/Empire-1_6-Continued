@@ -3,5 +3,23 @@
 
 <ExplainSettlementIdeo>This is your settlements currently held ideology.</ExplainSettlementIdeo>
 <ExplainSettlementGovernor>Here, you'll be able to install a governor to handle your settlements. A governor's people skills (social) and applicable work experience (like medical skill for medicine production) directly influence the productivity of your settlements.</ExplainSettlementGovernor>
-
+  <GovernorKindVeryLow>Whispers of {PAWN_possessive} cruelty abound.</GovernorKindVeryLow>
+  <GovernorKindLow>Harsh treatment is the norm under {PAWN_possessive} rule.</GovernorKindLow>
+  <GovernorKindHigh>{PAWN_pronoun} is described as merciful and kind.</GovernorKindHigh>
+  <GovernorKindVeryHigh>Tales of {PAWN_possessive} kindness are told throughout the settlement. </GovernorKindVeryHigh>
+  <GovernorRationalVeryLow>{PAWN_possessive} demeanour is erratic and utterly unpredictable.</GovernorRationalVeryLow>
+  <GovernorRationalLow>{PAWN_pronoun} cares little for convention... or logic.</GovernorRationalLow>
+  <GovernorRationalHigh>{PAWN_pronoun} is pragmatic and rational.</GovernorRationalHigh>
+  <GovernorRationalVeryHigh>{PAWN_pronoun} lives in an orderly world of facts and numbers.</GovernorRationalVeryHigh>
+  <GovernorProfessionalVeryLow>{PAWN_pronoun} would rather lounge about all day than lift a finger.</GovernorProfessionalVeryLow>
+  <GovernorProfessionalLow>{PAWN_pronoun} is known to often shirk {PAWN_possessive} duties.</GovernorProfessionalLow>
+  <GovernorProfessionalHigh>{PAWN_pronoun} strives to diligently fulfill his job.</GovernorProfessionalHigh>
+  <GovernorProfessionalVeryHigh>{PAWN_pronoun} is absolutely dutiful, if an unrepentant workaholic.</GovernorProfessionalVeryHigh>
+  <GovernorLikeableVeryLow>Other people can barely stomach having {PAWN_objective} around.</GovernorLikeableVeryLow>
+  <GovernorLikeableLow>Whether due to {PAWN_possessive} habits or appearance, {PAWN_pronoun} is easy to dislike.</GovernorLikeableLow>
+  <GovernorLikeableHigh>{PAWN_pronoun} is good at making friends.</GovernorLikeableHigh>
+  <GovernorLikeableVeryHigh>{PAWN_pronoun} is immensely popular and gregarious.</GovernorLikeableVeryHigh>
+  <GovernorPersonality>Your governor {PAWN_nameFull} manages this settlement.</GovernorPersonality>
+  <GovernorBoring>Your governor {PAWN_nameFull} is almost aggressively unremarkable.</GovernorBoring>
+  <NoGovernor>You currently don't have a governor. You might want to appoint one.</NoGovernor>
 </LanguageData>

@@ -23,8 +23,8 @@ Global
 		Testing|x86 = Testing|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|x64.Build.0 = Debug|Any CPU
 		{511DC98D-C7A7-4667-B266-EDFDD479631F}.Debug|x86.ActiveCfg = Debug|Any CPU

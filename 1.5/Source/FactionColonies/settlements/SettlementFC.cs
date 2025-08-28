@@ -84,7 +84,7 @@ namespace FactionColonies
 
             // Ideology
             this.mainIdeology = Faction.OfPlayer.ideos.PrimaryIdeo;
-            this.governorid = -1;
+            this.governor = new Governor(this);
         }
 
         public void addPrisoner(Pawn prisoner)
@@ -356,7 +356,7 @@ namespace FactionColonies
                                                     ((100 + egalitarianTaxBoost + isolationistTaxBoost
                                                     + TraitUtilsFC.cycleTraits("taxBasePercentage", traits, Operation.Addition)
                                                     + TraitUtilsFC.cycleTraits("taxBasePercentage", Find.World.GetComponent<FactionFC>().traits, Operation.Addition)) / 100)
-                                                    + getGovernorResourceMultiplier(resourceType);
+                                                    + governor.getGovernorResourceMultiplier(resourceType);
 
 
                 //add up additive variables
@@ -543,6 +543,8 @@ namespace FactionColonies
 
         // Ideology
 
+
+        //TODO: Mark for updates
         public Ideo Ideo()
         {
             if (this.mainIdeology == null)
@@ -556,61 +558,7 @@ namespace FactionColonies
 
         }
 
-        public void InstallNewGovernor(Pawn gov = null)
-        {
-            // if (!old.Faction != FactionColonies.getPlayerColonyFaction()) Make deposed governors join players
-            // TODO: Sanity checking for player-sent governors, like removing them properly
-            if (currentGovernor != null)
-                Find.WorldPawns.RemovePawn(currentGovernor);
-            if (gov == null)
-                this.governorid = generateLocalGovernor().thingIDNumber;
-            else
-                this.governorid = gov.thingIDNumber;
-            updateProfitAndProduction();
 
-        }
-
-        private Pawn generateLocalGovernor()
-        {
-
-
-            Pawn pawn = PawnGenerator.GeneratePawn(new PawnGenerationRequest(PawnKindDefOf.Colonist, Faction.OfPlayer, context: PawnGenerationContext.NonPlayer));
-            this.governorid = pawn.thingIDNumber;
-            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
-            pawn.skills.skills.ForEach(skill => skill.Level = Math.Min(skill.Level, 10));
-            return pawn;
-        }
-
-        public float getGovernorResourceMultiplier(ResourceType resourceType)
-        {
-            if (currentGovernor == null) return 0.33f;
-            float relevantSkillRating = 0;
-            var plants = currentGovernor.skills.GetSkill(SkillDefOf.Plants).Level;
-            var intellectual = currentGovernor.skills.GetSkill(SkillDefOf.Intellectual).Level;
-            var crafting = currentGovernor.skills.GetSkill(SkillDefOf.Crafting).Level;
-            var construction = currentGovernor.skills.GetSkill(SkillDefOf.Construction).Level;
-            var melee = currentGovernor.skills.GetSkill(SkillDefOf.Melee).Level;
-            var ranged = currentGovernor.skills.GetSkill(SkillDefOf.Shooting).Level;
-            var artistic = currentGovernor.skills.GetSkill(SkillDefOf.Artistic).Level;
-            var social = currentGovernor.skills.GetSkill(SkillDefOf.Social).Level;
-            var medical = currentGovernor.skills.GetSkill(SkillDefOf.Medicine).Level;
-            var animals = currentGovernor.skills.GetSkill(SkillDefOf.Animals).Level;
-            var mining = currentGovernor.skills.GetSkill(SkillDefOf.Mining).Level;
-            switch (resourceType)
-            {
-                case ResourceType.Research: relevantSkillRating = intellectual; break;
-                case ResourceType.Power: relevantSkillRating = intellectual; break;
-                case ResourceType.Apparel: relevantSkillRating = crafting; break;
-                case ResourceType.Weapons: relevantSkillRating = crafting; break;
-                case ResourceType.Medicine: relevantSkillRating = medical; break;
-                case ResourceType.Animals: relevantSkillRating = animals; break;
-                case ResourceType.Food: relevantSkillRating = Math.Max(animals, plants); break;
-                case ResourceType.Logging: relevantSkillRating = plants; break;
-                case ResourceType.Mining: relevantSkillRating = mining; break;
-            }
-            float aptitude = (relevantSkillRating + social) * 0.0625f; // Leads to a total 2.5 multiplier if both social and the relevant ability are maxed.
-            return Math.Max(aptitude, 0.5f); // The modifier is always at least 0.5, so combined ratings at 8 or below won't affect things unduly.
-        }
 
         public void ExposeData()
         {
@@ -680,7 +628,7 @@ namespace FactionColonies
 
             // Ideology
             Scribe_Values.Look(ref ideoId, "ideoID", -999);
-            Scribe_Values.Look(ref governorid, "governorid");
+            Scribe_Deep.Look(ref governor, "governor");
 
             //Prisoners
             Scribe_Collections.Look(ref prisonerList, "prisonerList", LookMode.Deep);
@@ -731,8 +679,7 @@ namespace FactionColonies
         // Ideology
 
         private Ideo mainIdeology;
-        private int governorid;
-        public Pawn currentGovernor => Find.WorldPawns.AllPawnsAlive.FirstOrDefault(p => p.thingIDNumber == governorid);
+        public Governor governor = new Governor();
 
 
         //ui only

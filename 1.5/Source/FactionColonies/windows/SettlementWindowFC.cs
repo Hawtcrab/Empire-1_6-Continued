@@ -116,7 +116,7 @@ namespace FactionColonies
             {
                 //Upgrades
                 DrawFacilities(0, 295);
-                DrawDescription(150, 80, 370, 220);
+                DrawDescription();
 
                 //Divider
                 Widgets.DrawLineVertical(530, 0, 564);
@@ -364,11 +364,11 @@ namespace FactionColonies
 
             //Draw town name
             Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(new Rect(40, 0, 340, 30), settlement.name);
+            Widgets.Label(new Rect(40, 0, 340, 45), settlement.name);
 
             //Draw town title
             Text.Font = GameFont.Tiny;
-            Widgets.Label(new Rect(50, 25, 150, 20), settlement.title); //returnSettlement().title);
+            Widgets.Label(new Rect(40, 40, 150, 20), settlement.title); //returnSettlement().title);
 
             if (Mouse.IsOver(mainrect))
             {
@@ -383,7 +383,7 @@ namespace FactionColonies
             }
 
             //Draw header Settings button
-            if (Widgets.ButtonImage(new Rect(345, 5, 20, 20), TexLoad.iconCustomize))
+            if (Widgets.ButtonImage(new Rect(350, 5, 20, 20), TexLoad.iconCustomize))
             {
                 //if click faction customize button
                 Find.WindowStack.Add(new SettlementCustomizeWindowFc(settlement));
@@ -409,42 +409,69 @@ namespace FactionColonies
                 TooltipHandler.TipRegion(rect, tip);
             }
 
+
             // Governor Spot
             var rect2 = new Rect(460, 0, 60, 60);
             Widgets.DrawHighlight(rect2);
-            if (settlement.currentGovernor != null)
-                Widgets.ThingIcon(rect2, settlement.currentGovernor);
+            if (settlement.governor.currentGovernor != null)
+                Widgets.ThingIcon(rect2, settlement.governor.currentGovernor);
             Widgets.DrawBox(rect2);
-            if (Mouse.IsOver(rect2))
-            {
-                TipSignal tip;
-                if (settlement.currentGovernor != null)
-                {
-                    tip =new TipSignal(() => string.Concat(new string[] {
-                    "ExplainSettlementGovernor".Translate(),
-                    "\n\nCurrent Governor: " + settlement.currentGovernor.Name,
-                    "\n\n" +  generateGovernorStatline(settlement.currentGovernor)
-                }
-                     ), this.settlement.loadID);
-                }
-                else
-                {
-                    tip = new TipSignal(() => string.Concat(new string[] {
-                    "ExplainSettlementGovernor".Translate(),
-                    "\n\nCurrently, you have no governor, but you may click here to appoint a random local."
-                }
-                    ), this.settlement.loadID);
-                }
-
-                TooltipHandler.TipRegion(rect2, tip);
-            }
             if (Widgets.ButtonInvisible(rect2))
             {
-                if (settlement.currentGovernor != null)
-                    Find.WindowStack.Add(new GovernorWindow(settlement.currentGovernor));
+                if (settlement.governor.currentGovernor != null)
+                    Find.WindowStack.Add(new GovernorWindow(settlement.governor.currentGovernor));
                 else
-                    settlement.InstallNewGovernor();
+                    settlement.governor.InstallGovernor();
 
+            }
+            if (Mouse.IsOver(rect2) && settlement.governor.currentGovernor != null)
+            {
+                TipSignal tip = new TipSignal(() => settlement.governor.GetDescription(), this.settlement.governor.currentGovernor.thingIDNumber);
+                TooltipHandler.TipRegion(rect2, tip);
+            }
+
+            //Rect(150, 80, 370, 55);
+            var buttonRect = new Rect(150, 80, 110, 25);
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Widgets.DrawHighlight(buttonRect);
+            if (settlement.governor.currentGovernor == null && Widgets.ButtonText(buttonRect, "Appoint"))
+            {
+                settlement.governor.InstallGovernor();
+            }
+            if (settlement.governor.currentGovernor != null && Widgets.ButtonText(buttonRect, "Depose"))
+            {
+                settlement.governor.RemoveGovernor();
+            }
+            if (settlement.governor.currentGovernor != null)
+            {
+                var bribe = buttonRect.CopyAndShift(buttonRect.width + 10.0f, 0.0f);
+                if (Widgets.ButtonText(bribe, "Bribe"))
+                {
+
+                }
+                var intimidate = buttonRect.CopyAndShift(0.0f, buttonRect.height + 10.0f);
+                if (Widgets.ButtonText(intimidate, "Intimidate"))
+                {
+
+                }
+                var train = buttonRect.CopyAndShift(buttonRect.width + 10.0f, buttonRect.height + 10.0f);
+                if (Widgets.ButtonText(train, "Train"))
+                {
+
+                }
+
+                var stance = bribe.CopyAndShift(buttonRect.width + 10.0f, 0.0f);
+                if (Widgets.ButtonText(stance, "Suggest Stance"))
+                {
+
+                }
+
+                var advisors = train.CopyAndShift(buttonRect.width + 10.0f, 0.0f);
+                if (Widgets.ButtonText(advisors, "Advisors"))
+                {
+
+                }
             }
 
         }
@@ -472,7 +499,7 @@ namespace FactionColonies
         {
             string stats = "";
             Enum.GetValues(typeof(ResourceType)).Cast<ResourceType>().Do(
-                type => stats += Enum.GetName(typeof(ResourceType), type) + ": " + settlement.getGovernorResourceMultiplier(type) + "\n");
+                type => stats += Enum.GetName(typeof(ResourceType), type) + ": " + settlement.governor.getGovernorResourceMultiplier(type) + "\n");
             return stats;
         }
 
@@ -788,14 +815,20 @@ namespace FactionColonies
             }
         }
 
-        public void DrawDescription(int x, int y, int length, int size)
+        private static readonly Rect lowerdesc = new Rect(150, 145, 370, 155);
+        private static readonly Rect lowerdescLabel = new Rect(155, 145, 365, 150);
+  
+
+        public void DrawDescription()
         {
+            // DrawDescription(150, 80, 370, 220);
             //Widgets.Label(new Rect(x, y - 20, 100, 30), "Description".Translate());
-            Widgets.DrawMenuSection(new Rect(x, y, length, size));
+            Widgets.DrawMenuSection(lowerdesc);
 
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.UpperLeft;
-            Widgets.Label(new Rect(x + 5, y + 5, length - 10, size - 10), settlement.description);
+            Widgets.Label(lowerdescLabel, settlement.description);
+   
         }
 
         public void DrawProductionHeader(int x, int y)

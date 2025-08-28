@@ -8,30 +8,15 @@ using Verse;
 
 namespace FactionColonies
 {
-    /// <summary>
-    /// Maps a pawn trait to governor personality values. Generally, values should range from -2 to +2.
-    /// The axis are, from negative values to positive:
-    /// Cruel/Kind
-    /// Erratic/Rational
-    /// Decadent/Diligent
-    /// </summary>
-    public class GovTraitDef : Def, IExposable
+    public class GovTraitDef : Def
     {
-        public void ExposeData()
-        {
-            Scribe_Deep.Look(ref trait, "trait");
-            Scribe_Values.Look(ref kind, "kind");
-            Scribe_Values.Look(ref rational, "rational");
-            Scribe_Values.Look(ref diligent, "diligent");
-            Scribe_Values.Look(ref likeable, "likeable");
-        }
+        public GovTraitDef() { }
 
-        TraitDef trait;
-        int kind = 0;
-        int rational = 0;
-        int diligent = 0;
-        int likeable = 0;
-
-        
+        public TraitDef trait;
+        public int kind = 0;
+        public int rational = 0;
+        public int professional = 0;
+        public int likeable = 0;
+        public int degree = 0;
     }
 }
