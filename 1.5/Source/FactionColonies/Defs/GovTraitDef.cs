@@ -23,14 +23,14 @@ namespace FactionColonies
             Scribe_Values.Look(ref kind, "kind");
             Scribe_Values.Look(ref rational, "rational");
             Scribe_Values.Look(ref diligent, "diligent");
-
+            Scribe_Values.Look(ref likeable, "likeable");
         }
 
         TraitDef trait;
         int kind = 0;
         int rational = 0;
         int diligent = 0;
-        TraitDefOf
+        int likeable = 0;
 
         
     }

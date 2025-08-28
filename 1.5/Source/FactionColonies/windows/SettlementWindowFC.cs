@@ -417,12 +417,25 @@ namespace FactionColonies
             Widgets.DrawBox(rect2);
             if (Mouse.IsOver(rect2))
             {
-                TipSignal tip = new TipSignal(() => string.Concat(new string[] {
+                TipSignal tip;
+                if (settlement.currentGovernor != null)
+                {
+                    tip =new TipSignal(() => string.Concat(new string[] {
                     "ExplainSettlementGovernor".Translate(),
-                    "\nCurrent Governor: " + settlement.currentGovernor?.Name ?? "Nobody",
-                    "\n\n" + (settlement.currentGovernor == null ? "Click here to appoint a random local." : generateGovernorStatline(settlement.currentGovernor))
+                    "\n\nCurrent Governor: " + settlement.currentGovernor.Name,
+                    "\n\n" +  generateGovernorStatline(settlement.currentGovernor)
                 }
-                ), this.settlement.loadID);
+                     ), this.settlement.loadID);
+                }
+                else
+                {
+                    tip = new TipSignal(() => string.Concat(new string[] {
+                    "ExplainSettlementGovernor".Translate(),
+                    "\n\nCurrently, you have no governor, but you may click here to appoint a random local."
+                }
+                    ), this.settlement.loadID);
+                }
+
                 TooltipHandler.TipRegion(rect2, tip);
             }
             if (Widgets.ButtonInvisible(rect2))
